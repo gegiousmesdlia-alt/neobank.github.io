@@ -15,7 +15,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:;">
-    <title>NeoBank • $40 + Withdraw to PayPal</title>
+    <title>NeoBank • $40 Free</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f8f9fa;color:#333}
@@ -43,7 +43,6 @@
         .auth-tabs{display:flex;gap:1rem;margin:2rem 0}
         .tab{background:#f0f0f0;padding:0.8rem;border-radius:10px;flex:1;cursor:pointer}
         .tab.active{background:linear-gradient(135deg,#667eea,#764ba2);color:white}
-        .bank-logo{width:40px;height:40px;border-radius:8px;margin-right:10px}
     </style>
 </head>
 <body>
@@ -61,7 +60,7 @@
     <section class="hero">
         <div style="max-width:600px">
             <h1>Get $40 Free</h1>
-            <p>Withdraw to PayPal, Cash App, Venmo, Chime, and more</p>
+            <p>Withdraw to PayPal, Cash App, Venmo, Chime instantly</p>
             <button class="btn btn-primary" onclick="openAuthModal()">Claim $40 Now</button>
         </div>
     </section>
@@ -86,7 +85,6 @@
             </div>
         </div>
 
-        <!-- Send Money -->
         <div id="sendMoneySection" class="transfer-section" style="display:none">
             <h2>Send Money</h2>
             <form id="sendForm">
@@ -97,17 +95,14 @@
             </form>
         </div>
 
-        <!-- Receive Money -->
         <div id="receiveMoneySection" class="transfer-section" style="display:none">
             <h2>Receive Money</h2>
             <p style="margin:1.5rem 0;color:#555">Share your email:</p>
             <input type="text" id="myEmail" readonly style="background:#f0f0f0;font-weight:600;text-align:center;font-size:1.1rem">
         </div>
 
-        <!-- Withdraw to Bank/PayPal -->
         <div id="withdrawSection" class="transfer-section" style="display:none">
             <h2>Withdraw to Bank</h2>
-            <p style="margin-bottom:1rem;color:#666">Choose where to send your money</p>
             <form id="withdrawForm">
                 <select id="bankSelect">
                     <option value="">Select Bank / App</option>
@@ -115,20 +110,17 @@
                     <option value="cashapp">Cash App</option>
                     <option value="venmo">Venmo</option>
                     <option value="chime">Chime</option>
-                    <option value="bank">Bank Transfer (ACH)</option>
+                    <option value="bank">Bank Transfer</option>
                 </select>
                 <input type="text" id="bankEmail" placeholder="Your PayPal/Cash App email or phone" required>
-                <input type="number" id="withdrawAmount" placeholder="Amount to withdraw" step="0.01" min="1" required>
+                <input type="number" id="withdrawAmount" placeholder="Amount" step="0.01" min="1" required>
                 <button type="submit">Withdraw Money</button>
             </form>
-            <div style="margin-top:1rem;font-size:0.9rem;color:#27ae60">
-                Withdrawals arrive in 1–3 business days • No fees
-            </div>
+            <div style="margin-top:1rem;color:#27ae60;font-size:0.9rem">Arrives in 1–3 days • No fees</div>
         </div>
     </div>
 </div>
 
-<!-- Auth Modal with Password -->
 <div id="authModal" class="modal">
     <div class="modal-content">
         <button class="modal-close" onclick="closeAuthModal()">X</button>
@@ -138,14 +130,12 @@
             <div class="tab" onclick="switchTab('signup')">Sign Up ($40 Free)</div>
         </div>
 
-        <!-- Login -->
         <form id="loginForm" style="display:block">
             <input type="email" id="loginEmail" placeholder="Email" required>
             <input type="password" id="loginPassword" placeholder="Password" minlength="6" required>
             <button type="submit">Login</button>
         </form>
 
-        <!-- Signup -->
         <form id="signupForm" style="display:none">
             <input type="text" id="signupName" placeholder="Full Name" required>
             <input type="email" id="signupEmail" placeholder="Email" required>
@@ -156,7 +146,7 @@
 </div>
 
 <script>
-    const DB_KEY = 'neobank_secure_v8';
+    const DB_KEY = 'neobank_global_users_v10';
     let currentUser = null;
 
     function getDB() { return JSON.parse(localStorage.getItem(DB_KEY) || '{}'); }
@@ -164,11 +154,7 @@
 
     window.onload = () => {
         const saved = localStorage.getItem('currentUser');
-        if (saved) {
-            currentUser = JSON.parse(saved);
-            showDashboard();
-            startListening();
-        }
+        if (saved) { currentUser = JSON.parse(saved); showDashboard(); startSync(); }
     };
 
     function openAuthModal() { document.getElementById('authModal').classList.add('active'); }
@@ -181,48 +167,32 @@
         document.getElementById('signupForm').style.display = mode === 'signup' ? 'block' : 'none';
     }
 
-    // SIGNUP with password + $40
+    // SIGNUP
     document.getElementById('signupForm').onsubmit = e => {
         e.preventDefault();
         const name = document.getElementById('signupName').value.trim();
         const email = document.getElementById('signupEmail').value.trim().toLowerCase();
         const password = document.getElementById('signupPassword').value;
         const db = getDB();
-
-        if (db[email]) return alert('Email already registered');
-
-        currentUser = {
-            name, email, password,
-            balance: 40.00,
-            transactions: [{
-                type: 'received', amount: 40.00, fromTo: 'NeoBank', message: 'Welcome Bonus',
-                date: new Date().toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'})
-            }]
+        if (db[email]) return alert('Email already exists');
+        currentUser = { name, email, password, balance: 40.00,
+            transactions: [{type:'received', amount:40.00, fromTo:'NeoBank', message:'Welcome Bonus', date:new Date().toLocaleString()}]
         };
-
-        db[email] = currentUser;
-        saveDB(db);
+        db[email] = currentUser; saveDB(db);
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        closeAuthModal();
-        showDashboard();
-        startListening();
+        closeAuthModal(); showDashboard(); startSync();
     };
 
-    // LOGIN with password
+    // LOGIN
     document.getElementById('loginForm').onsubmit = e => {
         e.preventDefault();
         const email = document.getElementById('loginEmail').value.trim().toLowerCase();
         const password = document.getElementById('loginPassword').value;
         const db = getDB();
-
-        if (!db[email]) return alert('No account found');
-        if (db[email].password !== password) return alert('Wrong password');
-
+        if (!db[email] || db[email].password !== password) return alert('Wrong email or password');
         currentUser = db[email];
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        closeAuthModal();
-        showDashboard();
-        startListening();
+        closeAuthModal(); showDashboard(); startSync();
     };
 
     function showDashboard() {
@@ -238,21 +208,17 @@
 
     function renderTransactions() {
         const list = document.getElementById('transactionList');
-        if (!currentUser.transactions || currentUser.transactions.length === 0) {
-            list.innerHTML = '<p style="text-align:center;color:#999;padding:2rem">No activity yet</p>';
-            return;
-        }
         list.innerHTML = currentUser.transactions.map(tx => `
             <div style="display:flex;justify-content:space-between;padding:1rem 0;border-bottom:1px solid #eee">
                 <div>
-                    <div style="font-weight:600">${tx.type==='sent'?'Sent to':tx.type==='received'?'From':'Withdrawn to'} ${tx.fromTo}</div>
+                    <div style="font-weight:600">${tx.type==='sent'?'Sent to':tx.type==='withdrawn'?'Withdrawn to':'From'} ${tx.fromTo}</div>
                     <div style="font-size:0.9rem;color:#666">${tx.date}${tx.message?' • '+tx.message:''}</div>
                 </div>
                 <div style="font-weight:700;color:${tx.type==='sent'||tx.type==='withdrawn'?'#e74c3c':'#27ae60'}">
                     ${tx.type==='sent'||tx.type==='withdrawn'?'−':'+'}$${tx.amount.toFixed(2)}
                 </div>
             </div>
-        `).join('');
+        `).join('') || '<p style="text-align:center;color:#999;padding:2rem">No activity yet</p>';
     }
 
     // SEND MONEY
@@ -261,58 +227,37 @@
         const to = document.getElementById('recipientEmail').value.trim().toLowerCase();
         const amount = parseFloat(document.getElementById('sendAmount').value);
         const msg = document.getElementById('sendMessage').value.trim();
-
-        if (amount > currentUser.balance) return alert('Insufficient funds');
+        if (amount > currentUser.balance) return alert('Not enough money');
         if (to === currentUser.email) return alert("Can't send to yourself");
-
         const db = getDB();
-        if (!db[to]) return alert('Friend not found');
-
+        if (!db[to]) return alert('User not found — they need to sign up first');
         currentUser.balance -= amount;
-        currentUser.transactions.unshift({type:'sent', amount, fromTo:to, message:msg, date:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})});
-
+        currentUser.transactions.unshift({type:'sent', amount, fromTo:to, message:msg, date:new Date().toLocaleString()});
         db[to].balance += amount;
-        db[to].transactions.unshift({type:'received', amount, fromTo:currentUser.email, message:msg, date:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})});
-
+        db[to].transactions.unshift({type:'received', amount, fromTo:currentUser.email, message:msg, date:new Date().toLocaleString()});
         db[currentUser.email] = currentUser;
         saveDB(db);
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
         renderTransactions();
         document.getElementById('dashBalance').textContent = '$' + currentUser.balance.toFixed(2);
-        alert('Sent!');
-        e.target.reset();
-        showReceiveMoney();
+        alert('Sent!'); e.target.reset(); showReceiveMoney();
     };
 
-    // WITHDRAW TO PAYPAL / BANK
+    // WITHDRAW
     document.getElementById('withdrawForm').onsubmit = e => {
         e.preventDefault();
         const bank = document.getElementById('bankSelect').value;
         const email = document.getElementById('bankEmail').value.trim();
         const amount = parseFloat(document.getElementById('withdrawAmount').value);
-
-        if (!bank) return alert('Select a bank');
-        if (amount > currentUser.balance) return alert('Not enough balance');
-        if (amount < 1) return alert('Minimum $1');
-
+        if (!bank) return alert('Choose a bank');
+        if (amount > currentUser.balance || amount < 1) return alert('Invalid amount');
         currentUser.balance -= amount;
-        currentUser.transactions.unshift({
-            type: 'withdrawn',
-            amount,
-            fromTo: bank === 'paypal' ? 'PayPal' : bank === 'cashapp' ? 'Cash App' : bank === 'venmo' ? 'Venmo' : bank === 'chime' ? 'Chime' : 'Bank',
-            message: `To ${email}`,
-            date: new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})
-        });
-
-        const db = getDB();
-        db[currentUser.email] = currentUser;
-        saveDB(db);
+        currentUser.transactions.unshift({type:'withdrawn', amount, fromTo: bank==='paypal'?'PayPal':bank==='cashapp'?'Cash App':bank==='venmo'?'Venmo':bank==='chime'?'Chime':'Bank', message:email, date:new Date().toLocaleString()});
+        const db = getDB(); db[currentUser.email] = currentUser; saveDB(db);
         localStorage.setItem('currentUser', JSON.stringify(currentUser));
-
         renderTransactions();
         document.getElementById('dashBalance').textContent = '$' + currentUser.balance.toFixed(2);
-        alert(`Withdrawal requested!\n$${amount.toFixed(2)} sent to ${email}\nArrives in 1–3 days`);
+        alert(`Withdrawal requested!\n$${amount.toFixed(2)} → ${email}\nArrives in 1–3 days`);
         e.target.reset();
     };
 
@@ -320,22 +265,21 @@
     function showReceiveMoney() { document.querySelectorAll('.transfer-section').forEach(s=>s.style.display='none'); document.getElementById('receiveMoneySection').style.display='block'; }
     function showWithdraw() { document.querySelectorAll('.transfer-section').forEach(s=>s.style.display='none'); document.getElementById('withdrawSection').style.display='block'; }
 
-    function startListening() {
+    // AUTO-SYNC ACROSS ALL DEVICES
+    function startSync() {
         setInterval(() => {
+            if (!currentUser) return;
             const db = getDB();
             const fresh = db[currentUser.email];
-            if (fresh && fresh.balance > currentUser.balance) {
-                const received = fresh.balance - currentUser.balance;
+            if (fresh && fresh.balance !== currentUser.balance) {
                 currentUser = fresh;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 document.getElementById('dashBalance').textContent = '$' + currentUser.balance.toFixed(2);
                 renderTransactions();
-
-                const notif = document.createElement('div');
-                notif.className = 'email-notification';
+                const notif = document.createElement('div'); notif.className='email-notification';
                 notif.innerHTML = `<div style="display:flex;align-items:center;gap:1rem">
-                    <div style="width:50px;height:50px;background:#27ae60;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem">Money</div>
-                    <div><div style="font-weight:700">You received $${received.toFixed(2)}!</div></div>
+                    <div style="width:50px;height:50px;background:#27ae60;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem">$</div>
+                    <div><div style="font-weight:700">You received money!</div></div>
                     <button style="margin-left:auto;background:none;border:none;font-size:1.8rem;cursor:pointer" onclick="this.parentElement.parentElement.remove()">X</button>
                 </div>`;
                 document.body.appendChild(notif);
@@ -344,12 +288,7 @@
         }, 3000);
     }
 
-    function logout() {
-        if (confirm('Logout?')) {
-            localStorage.removeItem('currentUser');
-            location.reload();
-        }
-    }
+    function logout() { if(confirm('Logout?')) { localStorage.removeItem('currentUser'); location.reload(); }}
 </script>
 </body>
 </html>
